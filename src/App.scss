@@ -359,3 +359,69 @@ footer {
 		font-size: 20px;
 	}
 }
+
+@media (max-width: 760px) {
+	.hero-section {
+		min-height: auto;
+		padding: 68px 24px 78px;
+	}
+
+	.hero-copy {
+		width: 100%;
+		max-width: none;
+	}
+
+	.hero-copy h1 {
+		font-size: clamp(48px, 14vw, 68px);
+		line-height: .92;
+	}
+
+	.hero-intro {
+		max-width: 330px;
+		margin-top: 30px;
+	}
+
+	.primary-button,
+	.contact-button {
+		max-width: 100%;
+	}
+
+	.hero-art {
+		position: relative;
+		right: auto;
+		bottom: auto;
+		width: min(76vw, 290px);
+		height: min(76vw, 290px);
+		margin: 58px auto 0;
+		transform: none;
+	}
+
+	.hero-art:hover {
+		transform: none;
+	}
+
+	.hero-metrics {
+		position: relative;
+		z-index: 2;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		display: grid;
+		width: 100%;
+		margin-top: 38px;
+	}
+
+	.hero-metrics div {
+		min-width: 0;
+	}
+
+	.hero-metrics span {
+		font-size: 9px;
+	}
+
+	.scroll-note {
+		position: relative;
+		right: auto;
+		bottom: auto;
+		left: auto;
+		margin-top: 46px;
+	}
+}
