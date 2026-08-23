@@ -60,7 +60,7 @@ function App() {
   return (
     <div className="site-shell">
       <header className={`nav-wrap${menuOpen ? ' menu-open' : ''}`}>
-        <a className="brand" href="#top" aria-label="Virexo home"><span className="brand-mark">V</span><span className="brand-name">{brandLetters.map((letter, index) => <span key={`${letter}-${index}`}>{letter}</span>)}</span></a>
+        <a className="brand" href="#top" aria-label="Virexo Digital Business Homepage"><span className="brand-mark">V</span><span className="brand-name">{brandLetters.map((letter, index) => <span key={`${letter}-${index}`}>{letter}</span>)}</span><span className="brand-label">Digital Business Homepage</span></a>
         <nav aria-label="Main navigation"><a href="#about" onClick={() => setMenuOpen(false)}>About</a><a href="#services" onClick={() => setMenuOpen(false)}>Services</a><a href="#contact" onClick={() => setMenuOpen(false)}>Contact</a></nav>
         <a className="nav-cta" href="#contact">Start a project <span aria-hidden="true">-&gt;</span></a>
         <button className="menu-toggle" type="button" aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><span /><span /></button>
