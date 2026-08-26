@@ -674,6 +674,16 @@ footer {
 	transform: translateY(-2px);
 }
 
+.nav-wrap nav a,
+.nav-wrap .nav-cta {
+	color: var(--ink);
+}
+
+.nav-wrap nav a:hover,
+.nav-wrap .nav-cta:hover {
+	color: var(--blue);
+}
+
 html[data-theme='dark'] {
 	--ink: #f4f7ff;
 	--paper: #10111a;
@@ -698,6 +708,16 @@ html[data-theme='dark'] .nav-wrap {
 
 html[data-theme='dark'] .nav-wrap:hover {
 	background: rgba(16, 17, 26, .98);
+}
+
+html[data-theme='dark'] .nav-wrap nav a,
+html[data-theme='dark'] .nav-wrap .nav-cta {
+	color: var(--ink);
+}
+
+html[data-theme='dark'] .nav-wrap nav a:hover,
+html[data-theme='dark'] .nav-wrap .nav-cta:hover {
+	color: var(--acid);
 }
 
 html[data-theme='dark'] .hero-section {
