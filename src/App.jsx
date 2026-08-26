@@ -14,6 +14,13 @@ const brandLetters = 'Virexo'.split('')
 function App() {
   const heroArtRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [darkMode, setDarkMode] = useState(() => window.localStorage.getItem('virexo-theme') === 'dark')
+  const [formSubmitted, setFormSubmitted] = useState(false)
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = darkMode ? 'dark' : 'light'
+    window.localStorage.setItem('virexo-theme', darkMode ? 'dark' : 'light')
+  }, [darkMode])
 
   useEffect(() => {
     const revealItems = document.querySelectorAll('.reveal')
@@ -65,6 +72,7 @@ function App() {
         <a className="brand" href="#top" aria-label="Virexo Innovations - Business Website"><span className="brand-mark">V</span><span className="brand-name">{brandLetters.map((letter, index) => <span key={`${letter}-${index}`}>{letter}</span>)}</span><span className="brand-label">Innovations</span></a>
         <nav aria-label="Main navigation"><a href="#about" onClick={() => setMenuOpen(false)}>About</a><a href="#services" onClick={() => setMenuOpen(false)}>Services</a><a href="#contact" onClick={() => setMenuOpen(false)}>Contact</a></nav>
         <a className="nav-cta" href="#contact">Start a project <span aria-hidden="true">-&gt;</span></a>
+        <button className="theme-toggle" type="button" aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} aria-pressed={darkMode} onClick={() => setDarkMode((mode) => !mode)}><span aria-hidden="true">{darkMode ? '☀' : '☾'}</span></button>
         <button className="menu-toggle" type="button" aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><span /><span /></button>
       </header>
       <main id="top">
@@ -72,7 +80,7 @@ function App() {
         <section className="trust-strip reveal" aria-label="Virexo capabilities"><span>Strategy-led</span><i /> <span>Technology-enabled</span><i /> <span>Results-focused</span><i /> <span>Built to scale</span></section>
         <section className="statement-section reveal" id="about"><p className="section-index">01 / About Virexo Innovations</p><div><h2>Digital Excellence<br /><span>Built for Growth.</span></h2><p className="statement-copy">At Virexo Innovations, we're passionate about helping businesses succeed in the digital age. Our team of experienced strategists, designers, and technologists work collaboratively to understand your unique challenges and deliver solutions that drive measurable impact. We don't just build digital products—we build lasting partnerships.</p><a className="text-link" href="#contact">Start Your Transformation <span aria-hidden="true">&#8599;</span></a></div></section>
         <section className="services-section reveal" id="services"><div className="section-heading"><p className="section-index">02 / Our Services</p><h2>Comprehensive Solutions<br /><em>for Modern Business.</em></h2></div><div className="service-list">{services.map((service) => <article className="service-item reveal" key={service.number} tabIndex="0"><p className="service-number">{service.number}</p><div><h3>{service.title}</h3><p>{service.description}</p><span className="service-tag">{service.tag}</span></div><span className="service-arrow" aria-hidden="true">&#8599;</span></article>)}</div></section>
-        <section className="contact-section reveal" id="contact"><p className="section-index">03 / Ready to Transform?</p><h2>Let's Build Something<br />Extraordinary <em>Together.</em></h2><p className="contact-intro">Whether you're starting a new initiative or transforming an existing one, our team is ready to help you succeed. Let's explore how Virexo Innovations can drive your business forward.</p><a className="contact-button" href="mailto:hello@virexoinnovations.com">Get In Touch <span aria-hidden="true">&#8599;</span></a></section>
+        <section className="contact-section reveal" id="contact"><div className="contact-content"><p className="section-index">03 / Start a project</p><h2>Ready to build something<br />your customers actually <em>trust?</em></h2><p className="contact-intro">Share a few details about your project and a member of the Virexo Innovations team will reply within one business day with a clear next step.</p><div className="contact-details"><a href="mailto:hello@virexoinnovations.com"><span>Email</span><strong>hello@virexoinnovations.com</strong></a><a href="tel:+15550192044"><span>Phone</span><strong>+1 (555) 019-2044</strong></a><div><span>Studio hours</span><strong>Mon-Fri, 9am-6pm</strong></div></div></div>{formSubmitted ? <div className="contact-form form-success" role="status"><span className="success-icon" aria-hidden="true">&#10003;</span><h3>Message received.</h3><p>Thank you for reaching out. Our team will reply within one business day.</p><button className="text-link" type="button" onClick={() => setFormSubmitted(false)}>Send another message <span aria-hidden="true">&#8599;</span></button></div> : <form className="contact-form" onSubmit={(event) => { event.preventDefault(); setFormSubmitted(true); event.currentTarget.reset() }}><label htmlFor="name">Full name</label><input id="name" name="name" type="text" placeholder="Your full name" autoComplete="name" required /><label htmlFor="email">Email address</label><input id="email" name="email" type="email" placeholder="you@company.com" autoComplete="email" required /><label htmlFor="details">Project details</label><textarea id="details" name="details" placeholder="What are you looking to build?" rows="5" required /><button className="contact-button" type="submit">Send message <span aria-hidden="true">&#8599;</span></button></form>}</section>
       </main>
       <footer><a className="brand" href="#top"><span className="brand-mark">V</span><span className="brand-name">{brandLetters.map((letter, index) => <span key={`${letter}-${index}`}>{letter}</span>)}</span></a><p>Digital Innovation for Ambitious Businesses</p><p>© 2026 Virexo Innovations. All rights reserved.</p></footer>
     </div>
