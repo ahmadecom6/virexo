@@ -11,6 +11,37 @@ const services = [
 
 const brandLetters = 'Virexo'.split('')
 
+function ChatAssistant() {
+  const [open, setOpen] = useState(false)
+  const [messages, setMessages] = useState([{ role: 'assistant', content: 'Hi, I am the Virexo assistant. How can we help with your project?' }])
+  const [input, setInput] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    const content = input.trim()
+    if (!content || loading) return
+    const nextMessages = [...messages, { role: 'user', content }]
+    setMessages(nextMessages)
+    setInput('')
+    setError('')
+    setLoading(true)
+    try {
+      const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: nextMessages }) })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || 'Unable to reach the assistant.')
+      setMessages((currentMessages) => [...currentMessages, { role: 'assistant', content: data.message }])
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return <><button className="chat-launcher" type="button" onClick={() => setOpen((isOpen) => !isOpen)} aria-label={open ? 'Close AI assistant' : 'Open AI assistant'} aria-expanded={open}>AI</button>{open && <aside className="chat-panel" aria-label="Virexo AI assistant"><div className="chat-header"><div><strong>Virexo AI</strong><span>Project assistant</span></div><button type="button" onClick={() => setOpen(false)} aria-label="Close AI assistant">×</button></div><div className="chat-messages" aria-live="polite">{messages.map((message, index) => <p className={`chat-message ${message.role}`} key={`${message.role}-${index}`}>{message.content}</p>)}{loading && <p className="chat-message assistant">Thinking...</p>}</div>{error && <p className="chat-error" role="alert">{error}</p>}<form className="chat-form" onSubmit={handleSubmit}><label className="sr-only" htmlFor="chat-message">Ask Virexo AI</label><input id="chat-message" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask about your project" maxLength="1000" disabled={loading} /><button type="submit" disabled={loading || !input.trim()} aria-label="Send message">↑</button></form></aside>}</>
+}
+
 function App() {
   const heroArtRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -67,6 +98,7 @@ function App() {
   }, [])
 
   return (
+    <>
     <div className="site-shell">
       <header className={`nav-wrap${menuOpen ? ' menu-open' : ''}`}>
         <a className="brand" href="#top" aria-label="Virexo Innovations - Business Website"><span className="brand-mark">V</span><span className="brand-name">{brandLetters.map((letter, index) => <span key={`${letter}-${index}`}>{letter}</span>)}</span><span className="brand-label">Innovations</span></a>
@@ -84,6 +116,8 @@ function App() {
       </main>
       <footer><a className="brand" href="#top"><span className="brand-mark">V</span><span className="brand-name">{brandLetters.map((letter, index) => <span key={`${letter}-${index}`}>{letter}</span>)}</span></a><p>Digital Innovation for Ambitious Businesses</p><p>© 2026 Virexo Innovations. All rights reserved.</p><div className="social-links" aria-label="Virexo Innovations social links"><a href="https://github.com/ahmadecom6/virexo" target="_blank" rel="noreferrer" aria-label="Virexo Innovations GitHub repository" title="GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fillRule="evenodd" d="M12 2.5a9.5 9.5 0 0 0-3 18.51c.48.09.66-.21.66-.46v-1.68c-2.69.59-3.26-1.15-3.26-1.15-.44-1.12-1.07-1.42-1.07-1.42-.88-.61.07-.6.07-.6.97.07 1.48 1 1.48 1 .86 1.47 2.27 1.05 2.82.8.09-.62.34-1.05.62-1.29-2.15-.24-4.41-1.08-4.41-4.79 0-1.06.38-1.92 1-2.6-.1-.24-.43-1.23.1-2.56 0 0 .81-.26 2.63 1a9.1 9.1 0 0 1 4.8 0c1.82-1.26 2.63-1 2.63-1 .53 1.33.2 2.32.1 2.56.62.68 1 1.54 1 2.6 0 3.72-2.27 4.55-4.43 4.78.35.3.66.9.66 1.82v2.7c0 .25.18.55.67.46A9.5 9.5 0 0 0 12 2.5Z" clipRule="evenodd" /></svg></a><a href="https://www.linkedin.com/in/ahmad-asif-4b75383ba?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" rel="noreferrer" aria-label="Ahmad Asif LinkedIn profile" title="LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5.2 7.2A1.7 1.7 0 1 1 5.2 3.8a1.7 1.7 0 0 1 0 3.4ZM3.8 20.2h2.8V9.1H3.8v11.1ZM8.5 9.1h2.7v1.5h.04c.38-.72 1.3-1.86 3.26-1.86 3.49 0 4.13 2.3 4.13 5.28v6.17h-2.8v-5.47c0-1.31-.02-3-1.83-3-1.83 0-2.11 1.43-2.11 2.91v5.56H8.5V9.1Z" /></svg></a></div></footer>
     </div>
+    <ChatAssistant />
+    </>
   )
 }
 
