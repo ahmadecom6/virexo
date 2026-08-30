@@ -1,19 +1,52 @@
 import 'dotenv/config'
-import express from 'express'
-import OpenAI from 'openai'
+import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import express from 'express'
+import multer from 'multer'
+import OpenAI from 'openai'
 
 const app = express()
 const port = Number(process.env.PORT || 3001)
-const projectRoot = path.dirname(fileURLToPath(import.meta.url))
-const distPath = path.join(projectRoot, 'dist')
 
 if (!process.env.GROQ_API_KEY) {
   console.warn('GROQ_API_KEY is not set. Add it to your .env file before using the AI assistant.')
 }
 
 app.use(express.json({ limit: '20kb' }))
+
+const applicationsDirectory = path.resolve('uploads', 'applications')
+fs.mkdirSync(applicationsDirectory, { recursive: true })
+
+const resumeUpload = multer({
+  storage: multer.diskStorage({
+    destination: applicationsDirectory,
+    filename: (_request, file, callback) => {
+      const extension = path.extname(file.originalname).toLowerCase()
+      callback(null, `${Date.now()}-${crypto.randomUUID()}${extension}`)
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_request, file, callback) => {
+    const acceptedTypes = new Set([
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ])
+    callback(null, acceptedTypes.has(file.mimetype))
+  },
+})
+
+app.post('/api/applications', resumeUpload.single('resume'), (request, response) => {
+  const { name, email, specialization, experience } = request.body
+  if (![name, email, specialization, experience].every((value) => typeof value === 'string' && value.trim())) {
+    return response.status(400).json({ error: 'Please complete every application field.' })
+  }
+  if (!request.file) {
+    return response.status(400).json({ error: 'A PDF, DOC, or DOCX resume is required.' })
+  }
+
+  return response.status(201).json({ message: 'Application received.' })
+})
 
 app.post('/api/chat', async (request, response) => {
   const messages = request.body?.messages
@@ -45,12 +78,6 @@ app.post('/api/chat', async (request, response) => {
     console.error('Groq request failed:', error.message)
     return response.status(502).json({ error: 'The AI assistant is temporarily unavailable. Please try again shortly.' })
   }
-})
-
-app.use(express.static(distPath))
-
-app.get('/{*splat}', (_request, response) => {
-  response.sendFile(path.join(distPath, 'index.html'))
 })
 
 app.listen(port, () => {
