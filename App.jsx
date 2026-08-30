@@ -283,8 +283,38 @@ const capabilityCards = [
   ['06', 'Growth Advisory', 'Prioritize the digital investments that move your business forward.'],
 ]
 
+function CountUp({ value, suffix = '' }) {
+  const numberRef = useRef(null)
+  const [displayValue, setDisplayValue] = useState(0)
+
+  useEffect(() => {
+    const element = numberRef.current
+    if (!element) return undefined
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return
+      observer.disconnect()
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setDisplayValue(value)
+        return
+      }
+      const duration = 1200
+      const startedAt = performance.now()
+      const update = (now) => {
+        const progress = Math.min((now - startedAt) / duration, 1)
+        setDisplayValue(Math.round(value * (1 - (1 - progress) ** 3)))
+        if (progress < 1) requestAnimationFrame(update)
+      }
+      requestAnimationFrame(update)
+    }, { threshold: 0.45 })
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [value])
+
+  return <strong ref={numberRef}>{displayValue}<span>{suffix}</span></strong>
+}
+
 function EnterpriseCapabilities() {
-  return <section className="enterprise-section" id="capabilities"><div className="enterprise-heading"><p className="section-index">03 / Enterprise capabilities</p><h2>Systems made for<br /><em>what comes next.</em></h2><p>Virexo brings strategy, technology, and experience design together into a single operating advantage.</p></div><div className="capability-grid">{capabilityCards.map(([number, title, description]) => <article className="capability-card" key={number}><span>{number}</span><i aria-hidden="true">✦</i><h3>{title}</h3><p>{description}</p><b>Explore <small>↗</small></b></article>)}</div><div className="impact-strip" aria-label="Virexo business impact"><div><span>Enterprise clients</span><strong>150<span>+</span></strong></div><div><span>Markets supported</span><strong>12</strong></div><div><span>Client retention</span><strong>98<span>%</span></strong></div><div><span>Years combined craft</span><strong>25<span>+</span></strong></div></div></section>
+  return <section className="enterprise-section" id="capabilities"><div className="enterprise-heading"><p className="section-index">03 / Enterprise capabilities</p><h2>Systems made for<br /><em>what comes next.</em></h2><p>Virexo brings strategy, technology, and experience design together into a single operating advantage.</p></div><div className="capability-grid">{capabilityCards.map(([number, title, description]) => <article className="capability-card" key={number}><span>{number}</span><i aria-hidden="true">✦</i><h3>{title}</h3><p>{description}</p><b>Explore <small>↗</small></b></article>)}</div><div className="impact-strip" aria-label="Virexo business impact"><div><span>Enterprise clients</span><CountUp value={150} suffix="+" /></div><div><span>Markets supported</span><CountUp value={12} /></div><div><span>Client retention</span><CountUp value={98} suffix="%" /></div><div><span>Years combined craft</span><CountUp value={25} suffix="+" /></div></div></section>
 }
 
 function App() {
