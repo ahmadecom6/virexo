@@ -274,6 +274,19 @@ function Careers() {
   </section>
 }
 
+const capabilityCards = [
+  ['01', 'Digital Infrastructure', 'Build secure foundations for scalable web, cloud, and customer platforms.'],
+  ['02', 'Intelligent Operations', 'Connect data, workflows, and automation to make daily decisions faster.'],
+  ['03', 'Experience Systems', 'Design focused digital journeys that earn customer confidence.'],
+  ['04', 'Data Enablement', 'Turn fragmented information into clear reporting and practical insight.'],
+  ['05', 'Platform Integration', 'Bring the tools your teams use into one dependable operating system.'],
+  ['06', 'Growth Advisory', 'Prioritize the digital investments that move your business forward.'],
+]
+
+function EnterpriseCapabilities() {
+  return <section className="enterprise-section" id="capabilities"><div className="enterprise-heading"><p className="section-index">03 / Enterprise capabilities</p><h2>Systems made for<br /><em>what comes next.</em></h2><p>Virexo brings strategy, technology, and experience design together into a single operating advantage.</p></div><div className="capability-grid">{capabilityCards.map(([number, title, description]) => <article className="capability-card" key={number}><span>{number}</span><i aria-hidden="true">✦</i><h3>{title}</h3><p>{description}</p><b>Explore <small>↗</small></b></article>)}</div><div className="impact-strip" aria-label="Virexo business impact"><div><span>Enterprise clients</span><strong>150<span>+</span></strong></div><div><span>Markets supported</span><strong>12</strong></div><div><span>Client retention</span><strong>98<span>%</span></strong></div><div><span>Years combined craft</span><strong>25<span>+</span></strong></div></div></section>
+}
+
 function App() {
   const heroArtRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -343,6 +356,7 @@ function App() {
         <section className="trust-strip reveal" aria-label="Virexo capabilities"><span>Strategy-led</span><i /> <span>Technology-enabled</span><i /> <span>Results-focused</span><i /> <span>Built to scale</span></section>
         <section className="statement-section reveal" id="about"><p className="section-index">01 / About Virexo Innovations</p><div><h2>Digital Excellence<br /><span>Built for Growth.</span></h2><p className="statement-copy">At Virexo Innovations, we're passionate about helping businesses succeed in the digital age. Our team of experienced strategists, designers, and technologists work collaboratively to understand your unique challenges and deliver solutions that drive measurable impact. We don't just build digital products—we build lasting partnerships.</p><a className="text-link" href="#contact">Start Your Transformation <span aria-hidden="true">&#8599;</span></a></div></section>
         <section className="services-section reveal" id="services"><div className="section-heading"><p className="section-index">02 / Our Services</p><h2>Comprehensive Solutions<br /><em>for Modern Business.</em></h2></div><div className="service-list">{services.map((service) => <article className="service-item reveal" key={service.number} tabIndex="0"><p className="service-number">{service.number}</p><div><h3>{service.title}</h3><p>{service.description}</p><span className="service-tag">{service.tag}</span></div><span className="service-arrow" aria-hidden="true">&#8599;</span></article>)}</div></section>
+        <EnterpriseCapabilities />
         <AnalyticsDashboard />
         <Careers />
         <section className="contact-section reveal" id="contact"><div className="contact-content"><p className="section-index">04 / Start a project</p><h2>Ready to build something<br />your customers actually <em>trust?</em></h2><p className="contact-intro">Share a few details about your project and a member of the Virexo Innovations team will reply within one business day with a clear next step.</p><div className="contact-details"><a href="mailto:virexoinnovations@gmail.com"><span>Email</span><strong>virexoinnovations@gmail.com</strong></a><a href="https://virexo.odoo.com" target="_blank" rel="noreferrer"><span>Official website</span><strong>virexo.odoo.com</strong></a><div><span>Studio hours</span><strong>Mon-Fri, 9am-6pm</strong></div></div></div>{formSubmitted ? <div className="contact-form form-success" role="status"><span className="success-icon" aria-hidden="true">&#10003;</span><h3>Message received.</h3><p>Thank you for reaching out. Our team will reply within one business day.</p><button className="text-link" type="button" onClick={() => setFormSubmitted(false)}>Send another message <span aria-hidden="true">&#8599;</span></button></div> : <form className="contact-form" onSubmit={(event) => { event.preventDefault(); setFormSubmitted(true); event.currentTarget.reset() }}><label htmlFor="name">Full name</label><input id="name" name="name" type="text" placeholder="Your full name" autoComplete="name" required /><label htmlFor="email">Email address</label><input id="email" name="email" type="email" placeholder="you@company.com" autoComplete="email" required /><label htmlFor="details">Project details</label><textarea id="details" name="details" placeholder="What are you looking to build?" rows="5" required /><button className="contact-button" type="submit">Send message <span aria-hidden="true">&#8599;</span></button></form>}</section>
