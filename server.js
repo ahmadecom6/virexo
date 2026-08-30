@@ -9,7 +9,7 @@ const app = express()
 const port = Number(process.env.PORT || 3001)
 const analyticsFile = path.resolve('uploads', 'analytics.json')
 
-const emptyAnalytics = () => ({ totalVisits: 0, pageViews: 0, sessions: {}, pages: {} })
+const emptyAnalytics = () => ({ totalVisits: 0, pageViews: 0, sessions: {}, pages: {}, minuteViews: {} })
 const loadAnalytics = () => {
   try {
     return { ...emptyAnalytics(), ...JSON.parse(fs.readFileSync(analyticsFile, 'utf8')) }
@@ -24,11 +24,17 @@ let persistTimer
 const analyticsSnapshot = () => {
   const now = Date.now()
   const activeVisitors = Object.values(analytics.sessions).filter((lastSeen) => now - lastSeen < 90_000).length
+  const currentMinute = Math.floor(now / 60_000)
+  const activity = Array.from({ length: 12 }, (_value, index) => {
+    const minute = currentMinute - 11 + index
+    return { label: index === 11 ? 'Now' : `${11 - index}m`, value: analytics.minuteViews[minute] || 0 }
+  })
   return {
     activeVisitors,
     totalVisits: analytics.totalVisits,
     pageViews: analytics.pageViews,
     pages: Object.entries(analytics.pages).sort(([, countA], [, countB]) => countB - countA).slice(0, 5),
+    activity,
     updatedAt: new Date().toISOString(),
   }
 }
@@ -59,6 +65,9 @@ app.post('/api/analytics/track', (request, response) => {
   analytics.sessions[sessionId] = Date.now()
   analytics.pageViews += 1
   analytics.pages[page] = (analytics.pages[page] || 0) + 1
+  const currentMinute = Math.floor(Date.now() / 60_000)
+  analytics.minuteViews[currentMinute] = (analytics.minuteViews[currentMinute] || 0) + 1
+  Object.keys(analytics.minuteViews).filter((minute) => Number(minute) < currentMinute - 60).forEach((minute) => delete analytics.minuteViews[minute])
   if (isNewVisitor) analytics.totalVisits += 1
   saveAnalytics()
   broadcastAnalytics()
