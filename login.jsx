@@ -35,7 +35,8 @@ function Portal() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
-      const data = await response.json()
+      const data = await response.json().catch(() => ({}))
+      if (response.status === 502) throw new Error('The portal service is unavailable. Please try again in a moment.')
       if (!response.ok) throw new Error(data.error || 'Unable to sign in.')
       window.localStorage.setItem(tokenKey, data.token)
       setAccount({ email: data.email })
