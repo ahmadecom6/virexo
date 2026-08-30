@@ -50,6 +50,31 @@ function ChatAssistant() {
   return <><button className="chat-launcher" type="button" onClick={() => setOpen((isOpen) => !isOpen)} aria-label={open ? 'Close AI assistant' : 'Open AI assistant'} aria-expanded={open}>AI</button>{open && <aside className="chat-panel" aria-label="Virexo AI assistant"><div className="chat-header"><div><strong>Virexo AI</strong><span>Project assistant</span></div><button type="button" onClick={() => setOpen(false)} aria-label="Close AI assistant">×</button></div><div className="chat-messages" aria-live="polite">{messages.map((message, index) => <p className={`chat-message ${message.role}`} key={`${message.role}-${index}`}>{message.content}</p>)}{loading && <p className="chat-message assistant">Thinking...</p>}</div>{error && <p className="chat-error" role="alert">{error}</p>}<form className="chat-form" onSubmit={handleSubmit}><label className="sr-only" htmlFor="chat-message">Ask Virexo AI</label><input id="chat-message" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask about your project" maxLength="1000" disabled={loading} /><button type="submit" disabled={loading || !input.trim()} aria-label="Send message">↑</button></form></aside>}</>
 }
 
+  function AnalyticsDashboard() {
+    const [analytics, setAnalytics] = useState(null)
+    const [open, setOpen] = useState(false)
+
+    useEffect(() => {
+      let sessionId = window.sessionStorage.getItem('virexo-analytics-session')
+      if (!sessionId) {
+        sessionId = crypto.randomUUID()
+        window.sessionStorage.setItem('virexo-analytics-session', sessionId)
+      }
+      fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, page: window.location.pathname }),
+      }).then((response) => response.ok ? response.json() : null).then((data) => data && setAnalytics(data)).catch(() => {})
+
+      const stream = new EventSource('/api/analytics/stream')
+      stream.onmessage = (event) => setAnalytics(JSON.parse(event.data))
+      return () => stream.close()
+    }, [])
+
+    const pageName = (page) => page === '/' ? 'Home' : page.replace(/^\//, '').replace(/\b\w/g, (letter) => letter.toUpperCase())
+
+    return <aside className={`analytics-panel${open ? ' is-open' : ''}`} aria-label="Live website analytics"><button className="analytics-toggle" type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open}><span className="analytics-pulse" />Analytics</button>{open && <div className="analytics-content"><div className="analytics-heading"><div><span>LIVE ANALYTICS</span><strong>Website pulse</strong></div><button type="button" onClick={() => setOpen(false)} aria-label="Close analytics dashboard">×</button></div><div className="analytics-stats"><div><span>Online now</span><strong>{analytics?.activeVisitors ?? '...'}</strong></div><div><span>All visits</span><strong>{analytics?.totalVisits ?? '...'}</strong></div><div><span>Page views</span><strong>{analytics?.pageViews ?? '...'}</strong></div></div><div className="analytics-pages"><span>Most viewed pages</span>{analytics?.pages?.length ? analytics.pages.map(([page, count]) => <p key={page}><span>{pageName(page)}</span><strong>{count}</strong></p>) : <p><span>Loading live data</span><strong>...</strong></p>}</div><small>Anonymous aggregate data. Updates in real time.</small></div>}</aside>
+  }
 function CinematicWorld() {
   const canvasRef = useRef(null)
 
@@ -321,6 +346,7 @@ function App() {
       <footer><a className="brand" href="#top"><span className="brand-mark">V</span><span className="brand-name">{brandLetters.map((letter, index) => <span key={`${letter}-${index}`}>{letter}</span>)}</span></a><p>Digital Innovation for Ambitious Businesses</p><p>© 2026 Virexo Innovations. All rights reserved.</p><div className="social-links" aria-label="Virexo Innovations social links"><a href="https://github.com/ahmadecom6/virexo" target="_blank" rel="noreferrer" aria-label="Virexo Innovations GitHub repository" title="GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fillRule="evenodd" d="M12 2.5a9.5 9.5 0 0 0-3 18.51c.48.09.66-.21.66-.46v-1.68c-2.69.59-3.26-1.15-3.26-1.15-.44-1.12-1.07-1.42-1.07-1.42-.88-.61.07-.6.07-.6.97.07 1.48 1 1.48 1 .86 1.47 2.27 1.05 2.82.8.09-.62.34-1.05.62-1.29-2.15-.24-4.41-1.08-4.41-4.79 0-1.06.38-1.92 1-2.6-.1-.24-.43-1.23.1-2.56 0 0 .81-.26 2.63 1a9.1 9.1 0 0 1 4.8 0c1.82-1.26 2.63-1 2.63-1 .53 1.33.2 2.32.1 2.56.62.68 1 1.54 1 2.6 0 3.72-2.27 4.55-4.43 4.78.35.3.66.9.66 1.82v2.7c0 .25.18.55.67.46A9.5 9.5 0 0 0 12 2.5Z" clipRule="evenodd" /></svg></a><a href="https://www.linkedin.com/in/ahmad-asif-4b75383ba?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" rel="noreferrer" aria-label="Ahmad Asif LinkedIn profile" title="LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5.2 7.2A1.7 1.7 0 1 1 5.2 3.8a1.7 1.7 0 0 1 0 3.4ZM3.8 20.2h2.8V9.1H3.8v11.1ZM8.5 9.1h2.7v1.5h.04c.38-.72 1.3-1.86 3.26-1.86 3.49 0 4.13 2.3 4.13 5.28v6.17h-2.8v-5.47c0-1.31-.02-3-1.83-3-1.83 0-2.11 1.43-2.11 2.91v5.56H8.5V9.1Z" /></svg></a></div></footer>
     </div>
     <ChatAssistant />
+      <AnalyticsDashboard />
     </>
   )
 }

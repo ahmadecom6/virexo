@@ -7,6 +7,39 @@ import OpenAI from 'openai'
 
 const app = express()
 const port = Number(process.env.PORT || 3001)
+const analyticsFile = path.resolve('uploads', 'analytics.json')
+
+const emptyAnalytics = () => ({ totalVisits: 0, pageViews: 0, sessions: {}, pages: {} })
+const loadAnalytics = () => {
+  try {
+    return { ...emptyAnalytics(), ...JSON.parse(fs.readFileSync(analyticsFile, 'utf8')) }
+  } catch {
+    return emptyAnalytics()
+  }
+}
+let analytics = loadAnalytics()
+const analyticsClients = new Set()
+let persistTimer
+
+const analyticsSnapshot = () => {
+  const now = Date.now()
+  const activeVisitors = Object.values(analytics.sessions).filter((lastSeen) => now - lastSeen < 90_000).length
+  return {
+    activeVisitors,
+    totalVisits: analytics.totalVisits,
+    pageViews: analytics.pageViews,
+    pages: Object.entries(analytics.pages).sort(([, countA], [, countB]) => countB - countA).slice(0, 5),
+    updatedAt: new Date().toISOString(),
+  }
+}
+const broadcastAnalytics = () => {
+  const message = `data: ${JSON.stringify(analyticsSnapshot())}\n\n`
+  analyticsClients.forEach((client) => client.write(message))
+}
+const saveAnalytics = () => {
+  clearTimeout(persistTimer)
+  persistTimer = setTimeout(() => fs.writeFileSync(analyticsFile, JSON.stringify(analytics)), 250)
+}
 
 if (!process.env.GROQ_API_KEY) {
   console.warn('GROQ_API_KEY is not set. Add it to your .env file before using the AI assistant.')
@@ -16,6 +49,34 @@ app.use(express.json({ limit: '20kb' }))
 
 const applicationsDirectory = path.resolve('uploads', 'applications')
 fs.mkdirSync(applicationsDirectory, { recursive: true })
+
+app.post('/api/analytics/track', (request, response) => {
+  const { sessionId, page } = request.body ?? {}
+  if (typeof sessionId !== 'string' || !/^[a-zA-Z0-9-]{12,80}$/.test(sessionId) || typeof page !== 'string' || !page.startsWith('/') || page.length > 120) {
+    return response.status(400).json({ error: 'A valid anonymous session and page are required.' })
+  }
+  const isNewVisitor = !analytics.sessions[sessionId]
+  analytics.sessions[sessionId] = Date.now()
+  analytics.pageViews += 1
+  analytics.pages[page] = (analytics.pages[page] || 0) + 1
+  if (isNewVisitor) analytics.totalVisits += 1
+  saveAnalytics()
+  broadcastAnalytics()
+  return response.status(202).json(analyticsSnapshot())
+})
+
+app.get('/api/analytics', (_request, response) => response.json(analyticsSnapshot()))
+
+app.get('/api/analytics/stream', (request, response) => {
+  response.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  })
+  response.write(`data: ${JSON.stringify(analyticsSnapshot())}\n\n`)
+  analyticsClients.add(response)
+  request.on('close', () => analyticsClients.delete(response))
+})
 
 const resumeUpload = multer({
   storage: multer.diskStorage({
