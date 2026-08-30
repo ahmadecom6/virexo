@@ -7,6 +7,7 @@ import OpenAI from 'openai'
 
 const app = express()
 const port = Number(process.env.PORT || 3001)
+const authTokens = new Map()
 const analyticsFile = path.resolve('uploads', 'analytics.json')
 
 const emptyAnalytics = () => ({ totalVisits: 0, pageViews: 0, sessions: {}, pages: {}, minuteViews: {} })
@@ -85,6 +86,41 @@ app.get('/api/analytics/stream', (request, response) => {
   response.write(`data: ${JSON.stringify(analyticsSnapshot())}\n\n`)
   analyticsClients.add(response)
   request.on('close', () => analyticsClients.delete(response))
+})
+
+const configuredAdminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase()
+const configuredAdminPassword = process.env.ADMIN_PASSWORD
+const getBearerToken = (request) => request.headers.authorization?.replace(/^Bearer\s+/i, '')
+
+app.post('/api/auth/login', (request, response) => {
+  const { email, password } = request.body ?? {}
+  if (typeof email !== 'string' || typeof password !== 'string') {
+    return response.status(400).json({ error: 'Enter your email and password.' })
+  }
+  if (!configuredAdminEmail || !configuredAdminPassword) {
+    return response.status(503).json({ error: 'Client portal access is not configured yet.' })
+  }
+  if (email.trim().toLowerCase() !== configuredAdminEmail || password !== configuredAdminPassword) {
+    return response.status(401).json({ error: 'The email or password is incorrect.' })
+  }
+  const token = crypto.randomUUID()
+  authTokens.set(token, { email: configuredAdminEmail, expiresAt: Date.now() + 8 * 60 * 60 * 1000 })
+  return response.json({ token, email: configuredAdminEmail })
+})
+
+app.get('/api/auth/session', (request, response) => {
+  const token = getBearerToken(request)
+  const session = authTokens.get(token)
+  if (!session || session.expiresAt < Date.now()) {
+    authTokens.delete(token)
+    return response.status(401).json({ error: 'Your session has expired.' })
+  }
+  return response.json({ email: session.email })
+})
+
+app.post('/api/auth/logout', (request, response) => {
+  authTokens.delete(getBearerToken(request))
+  return response.status(204).end()
 })
 
 const resumeUpload = multer({

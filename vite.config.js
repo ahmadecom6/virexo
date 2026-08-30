@@ -1,3 +1,4 @@
+import path from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -7,6 +8,14 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': 'http://localhost:3001',
+    },
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(import.meta.dirname, 'index.html'),
+        login: path.resolve(import.meta.dirname, 'login.html'),
+      },
     },
   },
 })
