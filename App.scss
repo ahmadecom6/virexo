@@ -1025,3 +1025,7 @@ html[data-theme='light'] .analytics-content { background: #f7fbff; } html[data-t
 
 @media (min-width: 761px) { .analytics-content { max-height: calc(100vh - 150px); overflow-y: auto; } }
 
+/* Analytics belongs to the main page flow, not a floating side panel. */
+.analytics-panel { position: relative; right: auto; bottom: auto; z-index: 1; padding: 96px clamp(24px, 10.5vw, 152px); background: #09132f; }.analytics-content { width: 100%; max-height: none; overflow: visible; margin: 0; }.analytics-panel .analytics-toggle { display: none; } #analytics { scroll-margin-top: 106px; }
+@media (max-width: 760px) { .analytics-panel { right: auto; bottom: auto; padding: 68px 24px; }.analytics-content { width: 100%; max-height: none; overflow: visible; } }
+
