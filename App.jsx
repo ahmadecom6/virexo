@@ -184,7 +184,7 @@ function CinematicWorld() {
     }
   }, [])
 
-  return <div className="cinematic-world" aria-hidden="true"><canvas ref={canvasRef} /><div className="world-title"><span>VIREXO</span><small>INNOVATIONS</small></div><p className="world-coordinate">DIGITAL TERRITORY / 2026</p></div>
+  return <div className="cinematic-world" aria-hidden="true"><canvas ref={canvasRef} /><div className="motion-hud"><span>LIVE SYSTEMS</span><span>01:42:08</span></div><div className="signal-track signal-track-one" /><div className="signal-track signal-track-two" /><div className="motion-card"><span>VX / 01</span><strong>Ideas in motion</strong><i /></div><div className="world-title"><span>VIREXO</span><small>INNOVATIONS</small></div><p className="world-coordinate">DIGITAL TERRITORY / 2026</p></div>
 }
 
 function Careers() {
