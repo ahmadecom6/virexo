@@ -5,8 +5,7 @@ export default async function handler(request, response) {
     return response.status(405).json({ error: 'Method not allowed.' })
   }
 
-  const usingOpenAI = Boolean(process.env.OPENAI_API_KEY)
-  const apiKey = process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY
+  const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
     return response.status(503).json({ error: 'AI is not configured. Add OPENAI_API_KEY in Vercel Environment Variables.' })
   }
@@ -21,9 +20,9 @@ export default async function handler(request, response) {
   )).map((message) => ({ role: message.role, content: message.content.slice(0, 1000) }))
 
   try {
-    const client = new OpenAI(usingOpenAI ? { apiKey } : { apiKey, baseURL: 'https://api.groq.com/openai/v1' })
+    const client = new OpenAI({ apiKey })
     const completion = await client.chat.completions.create({
-      model: usingOpenAI ? (process.env.OPENAI_MODEL || 'gpt-4.1-mini') : (process.env.GROQ_MODEL || 'groq/compound-mini'),
+      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
       messages: [
         { role: 'system', content: 'You are Virexo Innovations\' concise and helpful project assistant. Explain services, discovery, timelines, and next steps. Do not invent prices, promises, or company facts.' },
         ...safeMessages,
@@ -36,10 +35,10 @@ export default async function handler(request, response) {
   } catch (error) {
     console.error('AI request failed:', error.message)
     if (error.status === 401 || error.status === 403) {
-      return response.status(503).json({ error: 'The AI provider rejected its credentials. Update GROQ_API_KEY in Vercel, then redeploy.' })
+      return response.status(503).json({ error: 'OpenAI rejected the configured API key. Update OPENAI_API_KEY in Vercel, then redeploy.' })
     }
     if (error.status === 404) {
-      return response.status(503).json({ error: 'The configured AI model is unavailable. Check GROQ_MODEL in Vercel, then redeploy.' })
+      return response.status(503).json({ error: 'The configured OpenAI model is unavailable. Check OPENAI_MODEL in Vercel, then redeploy.' })
     }
     if (error.status === 429) {
       return response.status(429).json({ error: 'The AI service is busy. Please try again shortly.' })

@@ -48,7 +48,7 @@ const saveAnalytics = () => {
   persistTimer = setTimeout(() => fs.writeFileSync(analyticsFile, JSON.stringify(analytics)), 250)
 }
 
-if (!process.env.OPENAI_API_KEY && !process.env.GROQ_API_KEY) {
+if (!process.env.OPENAI_API_KEY) {
   console.warn('No AI API key is set. Add OPENAI_API_KEY to your .env file before using the AI assistant.')
 }
 
@@ -159,8 +159,7 @@ app.post('/api/chat', async (request, response) => {
   if (!Array.isArray(messages) || messages.length === 0) {
     return response.status(400).json({ error: 'A chat message is required.' })
   }
-  const usingOpenAI = Boolean(process.env.OPENAI_API_KEY)
-  const apiKey = process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY
+  const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
     return response.status(503).json({ error: 'AI is not configured. Add OPENAI_API_KEY to your .env file, then restart the server.' })
   }
@@ -170,9 +169,9 @@ app.post('/api/chat', async (request, response) => {
   )).map((message) => ({ role: message.role, content: message.content.slice(0, 1000) }))
 
   try {
-    const client = new OpenAI(usingOpenAI ? { apiKey } : { apiKey, baseURL: 'https://api.groq.com/openai/v1' })
+    const client = new OpenAI({ apiKey })
     const completion = await client.chat.completions.create({
-      model: usingOpenAI ? (process.env.OPENAI_MODEL || 'gpt-4.1-mini') : (process.env.GROQ_MODEL || 'groq/compound-mini'),
+      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
       messages: [
         { role: 'system', content: 'You are Virexo Innovations\' concise and helpful project assistant. Explain services, discovery, timelines, and next steps. Do not invent prices, promises, or company facts.' },
         ...safeMessages,
