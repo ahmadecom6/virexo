@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import express from 'express'
 import multer from 'multer'
-import OpenAI from 'openai'
+import { generateAiReply } from './api/ai.js'
 
 const app = express()
 const port = Number(process.env.PORT || 3001)
@@ -48,8 +48,8 @@ const saveAnalytics = () => {
   persistTimer = setTimeout(() => fs.writeFileSync(analyticsFile, JSON.stringify(analytics)), 250)
 }
 
-if (!process.env.OPENAI_API_KEY) {
-  console.warn('No AI API key is set. Add OPENAI_API_KEY to your .env file before using the AI assistant.')
+if (!process.env.GEMINI_API_KEY) {
+  console.warn('No Gemini API key is set. Add GEMINI_API_KEY to your .env file before using the AI assistant.')
 }
 
 app.use(express.json({ limit: '20kb' }))
@@ -166,30 +166,14 @@ app.post('/api/chat', async (request, response) => {
   if (!Array.isArray(messages) || messages.length === 0) {
     return response.status(400).json({ error: 'A chat message is required.' })
   }
-  const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) {
-    return response.status(503).json({ error: 'AI is not configured. Add OPENAI_API_KEY to your .env file, then restart the server.' })
-  }
-
-  const safeMessages = messages.slice(-10).filter((message) => (
-    message && ['user', 'assistant'].includes(message.role) && typeof message.content === 'string'
-  )).map((message) => ({ role: message.role, content: message.content.slice(0, 1000) }))
-
   try {
-    const client = new OpenAI({ apiKey })
-    const completion = await client.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'You are Virexo Innovations\' concise and helpful project assistant. Explain services, discovery, timelines, and next steps. Do not invent prices, promises, or company facts.' },
-        ...safeMessages,
-      ],
-      max_tokens: 300,
-    })
-    const message = completion.choices[0]?.message?.content?.trim()
-    if (!message) throw new Error('Empty Groq response')
+    const message = await generateAiReply(messages)
     return response.json({ message })
   } catch (error) {
-    console.error('AI request failed:', error.message)
+    console.error('Gemini request failed:', error.message)
+    if (error.status === 400 || error.status === 401 || error.status === 403) return response.status(503).json({ error: 'Gemini rejected its configuration. Update GEMINI_API_KEY, then restart the server.' })
+    if (error.status === 404) return response.status(503).json({ error: 'The configured Gemini model is unavailable. Check GEMINI_MODEL, then restart the server.' })
+    if (error.status === 429) return response.status(429).json({ error: 'Gemini is busy or has reached its usage limit. Please try again shortly.' })
     return response.status(502).json({ error: 'The AI assistant is temporarily unavailable. Please try again shortly.' })
   }
 })
