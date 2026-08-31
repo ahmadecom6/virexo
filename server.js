@@ -48,8 +48,8 @@ const saveAnalytics = () => {
   persistTimer = setTimeout(() => fs.writeFileSync(analyticsFile, JSON.stringify(analytics)), 250)
 }
 
-if (!process.env.GROQ_API_KEY) {
-  console.warn('GROQ_API_KEY is not set. Add it to your .env file before using the AI assistant.')
+if (!process.env.OPENAI_API_KEY && !process.env.GROQ_API_KEY) {
+  console.warn('No AI API key is set. Add OPENAI_API_KEY to your .env file before using the AI assistant.')
 }
 
 app.use(express.json({ limit: '20kb' }))
@@ -159,8 +159,10 @@ app.post('/api/chat', async (request, response) => {
   if (!Array.isArray(messages) || messages.length === 0) {
     return response.status(400).json({ error: 'A chat message is required.' })
   }
-  if (!process.env.GROQ_API_KEY) {
-    return response.status(503).json({ error: 'Groq is not configured. Add GROQ_API_KEY to your .env file, then restart the server.' })
+  const usingOpenAI = Boolean(process.env.OPENAI_API_KEY)
+  const apiKey = process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY
+  if (!apiKey) {
+    return response.status(503).json({ error: 'AI is not configured. Add OPENAI_API_KEY to your .env file, then restart the server.' })
   }
 
   const safeMessages = messages.slice(-10).filter((message) => (
@@ -168,9 +170,9 @@ app.post('/api/chat', async (request, response) => {
   )).map((message) => ({ role: message.role, content: message.content.slice(0, 1000) }))
 
   try {
-    const openai = new OpenAI({ apiKey: process.env.GROQ_API_KEY, baseURL: 'https://api.groq.com/openai/v1' })
-    const completion = await openai.chat.completions.create({
-      model: process.env.GROQ_MODEL || 'groq/compound-mini',
+    const client = new OpenAI(usingOpenAI ? { apiKey } : { apiKey, baseURL: 'https://api.groq.com/openai/v1' })
+    const completion = await client.chat.completions.create({
+      model: usingOpenAI ? (process.env.OPENAI_MODEL || 'gpt-4.1-mini') : (process.env.GROQ_MODEL || 'groq/compound-mini'),
       messages: [
         { role: 'system', content: 'You are Virexo Innovations\' concise and helpful project assistant. Explain services, discovery, timelines, and next steps. Do not invent prices, promises, or company facts.' },
         ...safeMessages,
@@ -181,7 +183,7 @@ app.post('/api/chat', async (request, response) => {
     if (!message) throw new Error('Empty Groq response')
     return response.json({ message })
   } catch (error) {
-    console.error('Groq request failed:', error.message)
+    console.error('AI request failed:', error.message)
     return response.status(502).json({ error: 'The AI assistant is temporarily unavailable. Please try again shortly.' })
   }
 })
