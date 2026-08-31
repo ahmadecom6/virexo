@@ -1,4 +1,4 @@
-import { generateAiReply } from './ai.js'
+import { fallbackReply, generateAiReply } from './ai.js'
 
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
@@ -18,8 +18,8 @@ export default async function handler(request, response) {
     if (error.status === 400 || error.status === 401 || error.status === 403) return response.status(503).json({ error: 'Gemini rejected its configuration. Update GEMINI_API_KEY in Vercel, then redeploy.' })
     if (error.status === 404) return response.status(503).json({ error: 'The configured Gemini model is unavailable. Check GEMINI_MODEL in Vercel, then redeploy.' })
     if (error.status === 429) {
-      return response.status(429).json({ error: 'Gemini is busy or has reached its usage limit. Please try again shortly.' })
+      return response.status(200).json({ message: fallbackReply(messages), fallback: true })
     }
-    return response.status(502).json({ error: 'The AI assistant is temporarily unavailable. Please try again shortly.' })
+    return response.status(200).json({ message: fallbackReply(messages), fallback: true })
   }
 }

@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import express from 'express'
 import multer from 'multer'
-import { generateAiReply } from './api/ai.js'
+import { fallbackReply, generateAiReply } from './api/ai.js'
 
 const app = express()
 const port = Number(process.env.PORT || 3001)
@@ -173,8 +173,8 @@ app.post('/api/chat', async (request, response) => {
     console.error('Gemini request failed:', error.message)
     if (error.status === 400 || error.status === 401 || error.status === 403) return response.status(503).json({ error: 'Gemini rejected its configuration. Update GEMINI_API_KEY, then restart the server.' })
     if (error.status === 404) return response.status(503).json({ error: 'The configured Gemini model is unavailable. Check GEMINI_MODEL, then restart the server.' })
-    if (error.status === 429) return response.status(429).json({ error: 'Gemini is busy or has reached its usage limit. Please try again shortly.' })
-    return response.status(502).json({ error: 'The AI assistant is temporarily unavailable. Please try again shortly.' })
+    if (error.status === 429) return response.json({ message: fallbackReply(messages), fallback: true })
+    return response.json({ message: fallbackReply(messages), fallback: true })
   }
 })
 
