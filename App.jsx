@@ -59,15 +59,17 @@ function ChatAssistant() {
         sessionId = crypto.randomUUID()
         window.sessionStorage.setItem('virexo-analytics-session', sessionId)
       }
+      const updateAnalytics = () => fetch('/api/analytics', { cache: 'no-store' })
+        .then((response) => response.ok ? response.json() : null)
+        .then((data) => data && setAnalytics(data))
+        .catch(() => {})
       fetch('/api/analytics/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, page: window.location.pathname }),
-      }).then((response) => response.ok ? response.json() : null).then((data) => data && setAnalytics(data)).catch(() => {})
-
-      const stream = new EventSource('/api/analytics/stream')
-      stream.onmessage = (event) => setAnalytics(JSON.parse(event.data))
-      return () => stream.close()
+      }).finally(updateAnalytics)
+      const interval = window.setInterval(updateAnalytics, 10_000)
+      return () => window.clearInterval(interval)
     }, [])
 
     const pageName = (page) => page === '/' ? 'Home' : page.replace(/^\//, '').replace(/\b\w/g, (letter) => letter.toUpperCase())
@@ -290,24 +292,32 @@ function CountUp({ value, suffix = '' }) {
   useEffect(() => {
     const element = numberRef.current
     if (!element) return undefined
+    let animationFrame
     const observer = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return
-      observer.disconnect()
+      if (!entry.isIntersecting) {
+        cancelAnimationFrame(animationFrame)
+        setDisplayValue(0)
+        return
+      }
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         setDisplayValue(value)
         return
       }
-      const duration = 1200
+      const duration = 650
       const startedAt = performance.now()
       const update = (now) => {
         const progress = Math.min((now - startedAt) / duration, 1)
         setDisplayValue(Math.round(value * (1 - (1 - progress) ** 3)))
-        if (progress < 1) requestAnimationFrame(update)
+        if (progress < 1) animationFrame = requestAnimationFrame(update)
       }
-      requestAnimationFrame(update)
+      cancelAnimationFrame(animationFrame)
+      animationFrame = requestAnimationFrame(update)
     }, { threshold: 0.45 })
     observer.observe(element)
-    return () => observer.disconnect()
+    return () => {
+      cancelAnimationFrame(animationFrame)
+      observer.disconnect()
+    }
   }, [value])
 
   return <strong ref={numberRef}>{displayValue}<span>{suffix}</span></strong>
