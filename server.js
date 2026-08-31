@@ -57,6 +57,13 @@ app.use(express.json({ limit: '20kb' }))
 const applicationsDirectory = path.resolve('uploads', 'applications')
 fs.mkdirSync(applicationsDirectory, { recursive: true })
 
+app.get('/api/health', (_request, response) => response.json({
+  status: 'ok',
+  aiConfigured: Boolean(process.env.OPENAI_API_KEY),
+  portalConfigured: Boolean(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD && process.env.PORTAL_SESSION_SECRET),
+  analyticsConfigured: Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN),
+}))
+
 app.post('/api/analytics/track', (request, response) => {
   const { sessionId, page } = request.body ?? {}
   if (typeof sessionId !== 'string' || !/^[a-zA-Z0-9-]{12,80}$/.test(sessionId) || typeof page !== 'string' || !page.startsWith('/') || page.length > 120) {
