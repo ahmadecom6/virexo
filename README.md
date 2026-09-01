@@ -126,6 +126,17 @@ npm run build
 npm run preview
 \\\
 
+### Share a Public Vercel Link
+
+Vercel Deployment Protection is controlled in the Vercel project dashboard, not in the repository. To let anyone open the live link without a Vercel account:
+
+1. Open the Virexo project in Vercel.
+2. Go to **Settings** > **Deployment Protection**.
+3. Turn off **Vercel Authentication** for Production and Preview deployments.
+4. Redeploy the `main` branch, then share the production URL.
+
+Do not enable Password Protection or Trusted IPs for a link that must be publicly accessible.
+
 ## 📊 Performance
 
 - Optimized CSS with minification
